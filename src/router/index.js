@@ -1,4 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { useUserStore } from '@/stores/users'
+import AdminLayout from '../views/Layouts/AdminLayout.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -19,18 +21,32 @@ const router = createRouter({
       component: ()=> import('../views/RegisterView.vue')
     },
     {
-      path: '/dashboard',
-      name: 'dashboard',
-      component: ()=> import('../views/dashboard/DashboardView.vue')
-    },        
+      path: '',
+      component: AdminLayout, // Usa tu layout para las rutas que requieren autenticación
+      meta: { auth: true },
+      children: [
+        {
+          path: '',
+          name: 'dashboard',
+          component: () => import('../views/dashboard/DashboardView.vue'),
+        },
+        {
+          path: 'users',
+          name: 'users',
+          component: () => import('../views/dashboard/Users/UsersListView.vue'),
+        },
+        // Agrega más rutas aquí
+      ]
+    }   
   ]
 })
 
 router.beforeEach(async (to, from, next) => {
+  const store = useUserStore();
 
   if (to.matched.some(record => record.meta.auth)) {
     if (!store.refreshToken) {
-      next('/auth'); // Redirige si no hay refreshToken
+      next('/'); // Redirige si no hay refreshToken
     } else {
       if (!store.accessToken) {
         await store.rehydrateAuth(); // Intenta obtener un nuevo accessToken

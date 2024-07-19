@@ -10,19 +10,47 @@ export const useUserStore = defineStore('userStore', () => {
     const socialData = ref(false);
     const userPermissions = ref(null); 
     const isLoadingPermissions = ref(false);
-    const accessToken = ref(null);
-    const refreshToken = ref(null);
+    const accessToken = ref(localStorage.getItem('access_token'));
+    const refreshToken = ref(localStorage.getItem('refresh_token'));
+    const usersList = ref([]);
 
-    /* onMounted(async () =>{
-    }) */
+    const router = useRouter();
 
-    const loadUserPermissions = async () => {
+    const isRehydrated = ref(false);
+
+    /* onMounted(async () => {
+      isAuth();
+      await rehydrateAuth();
+    }); */
+
+    const rehydrateAuth = async () => {
+      if (refreshToken.value) {
+        try {
+          const response = await APIService.refreshAuthToken({ refresh: refreshToken.value });
+          if (response.status === 200 && response.data.access) {
+            accessToken.value = response.data.access;
+            userData.value = response.data.authId;
+            authActive.value = true;
+            localStorage.setItem('access_token', response.data.access);
+            isRehydrated.value = true;
+            await loadUserPermissions(response.data.authId); 
+          } else {
+            throw new Error('Failed to refresh token');
+          }
+        } catch (error) {
+          console.error('Error al rehidratar la autenticación:', error);
+          logout();  // Si hay un error, asegúrate de limpiar el estado
+        }
+      } 
+    };
+
+    const loadUserPermissions = async (id) => {
         isLoadingPermissions.value = true;  // Comienza la carga
         try {
-          const response = await APIService.getUserData(); // Asume que este método realiza la llamada API al endpoint
+          const response = await APIService.getUserData(id); // Asume que este método realiza la llamada API al endpoint
           if (response.status === 200) {
             userPermissions.value = response.data;
-            console.log('user modules: ', response.data)
+            console.log('user modules: ', userPermissions.value )
             localStorage.setItem('user_permissions', JSON.stringify(response.data));
           } else {
             console.error('Error al cargar los permisos del usuario:', response.statusText);
@@ -38,16 +66,16 @@ export const useUserStore = defineStore('userStore', () => {
         try {
           const response = await APIService.getLogin(credentials, authType);
           if (response.status === 200) {
-            userData.value = response.data.user_data;
-            accessToken.value = response.data.access_token;
-            refreshToken.value = response.data.refresh_token;
+            userData.value = response.data.authId;
+            accessToken.value = response.data.access;
+            refreshToken.value = response.data.refresh;
+            console.log('response data user: ', response.data)
             authActive.value = true;
             errorAuth.value = null;
-            localStorage.setItem('user_data', JSON.stringify(response.data.user_data));
-            localStorage.setItem('user_data', JSON.stringify(response.data.user_data));
-            localStorage.setItem('access_token', response.data.access_token);
-            localStorage.setItem('refresh_token', response.data.refresh_token);
-            await loadUserPermissions(); 
+            localStorage.setItem('user_data', JSON.stringify(response.data.authId));
+            localStorage.setItem('access_token', response.data.access);
+            localStorage.setItem('refresh_token', response.data.refresh);
+            await loadUserPermissions(response.data.authId); 
             return { success: true };
           } else {
             errorAuth.value = 'Credenciales incorrectas';
@@ -60,6 +88,20 @@ export const useUserStore = defineStore('userStore', () => {
         }
     };
 
+    const getUsers = async () => {
+      try {
+        const response = await APIService.getUsers();
+        if (response.status === 200) {
+          usersList.value = response.data;
+        } else {
+          return { success: false };
+        }
+      } catch (error) {
+        console.error('Error users list: ', error);
+        return { success: false, error };
+      }
+    }
+
     const logout = () => {
       localStorage.removeItem('access_token');
       localStorage.removeItem('refresh_token');
@@ -71,27 +113,31 @@ export const useUserStore = defineStore('userStore', () => {
       userPermissions.value = null;
       authActive.value = false;
       router.push('/');
-  };
-    
-    function isAuth() {
-        const auth = accessToken.value;
-        if (auth) {
-            authActive.value = true;
-        } else {
-            authActive.value = false;
-        }
-    }
+    };
+      
+    const isAuth = () => {
+      const auth = localStorage.getItem('access_token');
+      if (auth) {
+          authActive.value = true;
+      } else {
+          authActive.value = false;
+      }
+    };
 
     return {
-        login,
-        logout,
-        isAuth,
-        userData,
-        errorAuth,
-        authActive,
-        socialData,
-        useUserStore,
-        userPermissions,
-        isLoadingPermissions
+      login,
+      logout,
+      isAuth,
+      rehydrateAuth,
+      userData,
+      errorAuth,
+      authActive,
+      socialData,
+      userPermissions,
+      isLoadingPermissions,
+      accessToken,
+      refreshToken,
+      getUsers,
+      usersList
     };
 });
