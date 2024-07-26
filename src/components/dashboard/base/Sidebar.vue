@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted, computed, watch } from 'vue';
+import { getFullImageUrl } from "@/helpers/";
 import { useUserStore } from '@/stores/users';
 
 const store = useUserStore();
@@ -68,7 +69,7 @@ onMounted(() => {
                 <li v-for="(module, index) in userPermissions" :key="module.module.id">
                     <div @click="toggleModule(index)" class="module-header tooltip">
                         <img 
-                            :src="module.module.icon || '/icons/icon_default.svg'" 
+                            :src="getFullImageUrl(module.module.icon) || '/icons/icon_default.svg'" 
                             alt="Icon"
                             class="module-icon icons__sidebar"
                         >
@@ -87,7 +88,7 @@ onMounted(() => {
                             <a :href="submodule.route" :title="submodule.name" class="tooltip">
                                 <img 
                                     class='icons__sidebar__sm'
-                                    :src="submodule.icon || '/icons/icon_default.svg'" 
+                                    :src="getFullImageUrl(submodule.icon) || '/icons/icon_default.svg'" 
                                     alt="Icon"
                                 >
                                 <span class="link hide text__sidebar__sm">{{ submodule.name }}</span>
@@ -120,8 +121,9 @@ nav {
     left: 0;
     min-height: 100vh;
     height: 100%;
-    border-radius: 1rem;
-    background: var(--primary-color);
+    border-top-right-radius: 1rem;
+    border-bottom-right-radius: 1rem;
+    background: var(--accent-color);
     width: 18rem;
     padding: 1rem 0.625rem;
     display: flex;
@@ -306,7 +308,7 @@ body.collapsed .sidebar-links li {
 
 .tooltip .tooltip__content {
     visibility: hidden;
-    background: var(--primary-color);
+    background: var(--accent-color);
     color: #000000;
     text-align: center;
     border-radius: 0.375rem;

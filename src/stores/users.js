@@ -102,6 +102,25 @@ export const useUserStore = defineStore('userStore', () => {
       }
     }
 
+    const createUser = async(data) => {
+      try {
+        const response = await APIService.createUser(data)
+        if(response.status === 201){
+          router
+          .push({
+            name: "users", // Nombre de la ruta de la vista del panel
+          })
+          .catch((err) => {});
+        }else{
+          console.log('status: ', response.status)
+          throw new Error(`Error creating user: ${response.statusText}`);
+        }
+      } catch (error) {
+        console.log('error create user: ', error)
+        throw error;
+      }
+    }
+
     const logout = () => {
       localStorage.removeItem('access_token');
       localStorage.removeItem('refresh_token');
@@ -112,7 +131,11 @@ export const useUserStore = defineStore('userStore', () => {
       userData.value = null;
       userPermissions.value = null;
       authActive.value = false;
-      router.push('/');
+      router
+      .push({
+        name: "home", // Nombre de la ruta de la vista del panel
+      })
+      .catch((err) => {});
     };
       
     const isAuth = () => {
@@ -138,6 +161,7 @@ export const useUserStore = defineStore('userStore', () => {
       accessToken,
       refreshToken,
       getUsers,
-      usersList
+      usersList,
+      createUser
     };
 });

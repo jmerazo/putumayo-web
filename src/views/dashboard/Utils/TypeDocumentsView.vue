@@ -1,55 +1,32 @@
 <script setup>
-import { ref, onMounted } from 'vue';
-import { useUserStore } from '@/stores/users';
 import { useModalStore } from "@/stores/modal";
-import ModalUsersAdd from '@/components/modals/dashboard/ModalUsersAdd.vue';
+import { useUtilsStore } from "@/stores/utils";
+import ModalTypeDocumentsAdd from '@/components/modals/dashboard/ModalTypeDocumentsAdd.vue';
 
-const store = useUserStore();
 const modal = useModalStore();
-const users = ref([]);
-
-onMounted(async () => {
-  await store.getUsers();
-  users.value = store.usersList;
-  console.log('users: ', users.value)
-});
+const utilsStore = useUtilsStore();
 </script>
 
 <template>
   <div class="users-list">
     <div class="title__users">
-        <h3>Users Putumayo</h3>
+        <h3>Type Documents Putumayo</h3>
     </div>
     <div class="btn__panelUsers">
-      <button @click.prevent="modal.handleClickModalUserAdd()" type="button" class="btn__adduser">
-        <img src="/icons/icon_user_add.svg" class="icon__panel">
+      <button @click.prevent="modal.handleClickModalTypedocsAdd()" type="button" class="btn__adduser">
+        <img src="/icons/icon_add.svg" class="icon__panel">
       </button>
     </div>    
     <hr class="seccion__divisor">
     <div class="cards-container">
-      <div v-for="user in users" :key="user.a_person.id" class="card">
-        <div class="card-header">
-          <h2>{{ user.a_person.first_name }} {{ user.a_person.last_name }}</h2>
-          <p class="txt__email">{{ user.a_person.email }}</p>
-          <p class="txt__rol">{{ user.a_rol.name }}</p>
+      <div v-for="t in utilsStore.typedocs" :key="t.id" :value="t.id" class="card">
+        <div class="icon__dependencies">
+          <img src="/icons/icon_typedocs.svg">
         </div>
-        <details>
-          <summary class="summary"><img src="/icons/icon_user_group.svg" class="icon__details">Groups</summary>
-          <ul class="txt__data_gm">
-            <li class="txt__data_gm" v-for="group in user.a_group" :key="group.id"><img src="/icons/icon_corner-down-right-fill.svg" class="icon__details">{{ group.name }}</li>
-          </ul>
-        </details>
-        <details>
-          <summary class="summary"><img src="/icons/icon_module.svg" class="icon__details">Modules</summary>
-          <ul>
-            <li v-for="module in user.modules" :key="module.id">
-              <strong class="txt__data_gm">{{ module.name }}</strong>
-              <ul class="txt__data_gm">
-                <li v-for="permission in module.permissions" :key="permission.id "><img src="/icons/icon_corner-down-right-fill.svg" class="icon__details"> {{ permission.name }}</li>
-              </ul>
-            </li>
-          </ul>
-        </details>
+        <div class="card-header">
+          <h2>{{ t.name }}</h2>
+          <span>{{ t.acronym }}</span>
+        </div>
         <div class="btn__settingsUser">
             <a href=""><img src="/icons/icon_edit.svg" class="icon__details"> </a>
             <a href=""><img src="/icons/icon_delete.svg" class="icon__details"> </a>            
@@ -57,13 +34,19 @@ onMounted(async () => {
       </div>
     </div>
   </div>
-  <ModalUsersAdd/>
+  <ModalTypeDocumentsAdd/>
 </template>
 
 <style scoped>
 .users-list {
   width: 100%;
   padding: 1rem;
+}
+
+.icon__dependencies {
+  display: flex;
+  margin: auto;
+  width: 4rem;
 }
 
 .btn__adduser {

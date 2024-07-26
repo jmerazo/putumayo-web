@@ -1,21 +1,38 @@
 <script setup>
-import { computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { RouterView, useRoute } from 'vue-router';
 import NavBar from '@/components/shared/Navbar.vue';
 import Slider from "@/components/shared/Slider.vue";
-import Footer from "@/components/shared/Footer.vue"
+import Footer from "@/components/shared/Footer.vue";
 import { useUserStore } from './stores/users';
 
 const route = useRoute();
 const store = useUserStore();
 
-// Recuperar los tokens del localStorage
-const auth_refresh = localStorage.getItem('refresh_token');
-const auth_access = localStorage.getItem('access_token');
+// Crear refs para los tokens
+const authRefresh = ref(localStorage.getItem('refresh_token'));
+const authAccess = ref(localStorage.getItem('access_token'));
 
 // Computed property para determinar si mostrar la barra de navegación
 const showNavBar = computed(() => {
-  return !(auth_access && auth_access !== '' && auth_refresh && auth_refresh !== ''); // Hide NavBar if authenticated
+  return !(authAccess.value && authAccess.value !== '' && authRefresh.value && authRefresh.value !== ''); // Hide NavBar if authenticated
+});
+
+// Función para actualizar los tokens desde localStorage
+const updateTokens = () => {
+  authRefresh.value = localStorage.getItem('refresh_token');
+  authAccess.value = localStorage.getItem('access_token');
+};
+
+// Verificar periódicamente los cambios en localStorage
+let intervalId;
+
+onMounted(() => {
+  intervalId = setInterval(updateTokens, 1000);
+});
+
+onUnmounted(() => {
+  clearInterval(intervalId);
 });
 </script>
 

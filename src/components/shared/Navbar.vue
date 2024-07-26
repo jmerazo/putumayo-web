@@ -47,10 +47,10 @@ const nuevoEstilo = () => {
         </RouterLink>
       </div>
       <!-- boton movil  -->
-      <button @click="mostrarNavMovil" id="menu__movil" class="menu__movil">
+      <!-- <button @click="mostrarNavMovil" id="menu__movil" class="menu__movil">
         <font-awesome-icon v-if="!navMovil" :icon="['fas', 'bars']" />
         <font-awesome-icon v-else :icon="['fas', 'x']" />
-      </button>
+      </button> -->
       <!-- fin boton movil -->
     </div>
     <!--fin nav movil -->

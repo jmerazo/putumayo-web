@@ -20,7 +20,7 @@ const handleLogin = async () => {
     if (response.success) {
       router
         .push({
-          name: "dashboard", // Nombre de la ruta de la vista del panel
+          name: "dashboardHome", // Nombre de la ruta de la vista del panel
         })
         .catch((err) => {});
     } else {

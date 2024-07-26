@@ -21,21 +21,65 @@ const router = createRouter({
       component: ()=> import('../views/RegisterView.vue')
     },
     {
-      path: '',
+      path: '/dashboard',
       component: AdminLayout, // Usa tu layout para las rutas que requieren autenticación
       meta: { auth: true },
       children: [
         {
-          path: '',
-          name: 'dashboard',
+          path: '/home',
+          name: 'dashboardHome',
           component: () => import('../views/dashboard/DashboardView.vue'),
         },
         {
-          path: 'users',
+          path: '/users',
           name: 'users',
           component: () => import('../views/dashboard/Users/UsersListView.vue'),
         },
-        // Agrega más rutas aquí
+        {
+          path: '/dependencies',
+          name: 'dependencies',
+          component: () => import('../views/dashboard/Utils/DependenciesView.vue'),
+        },
+        {
+          path: '/subdependencies',
+          name: 'subdependencies',
+          component: () => import('../views/dashboard/Utils/SubdependenciesView.vue'),
+        },
+        {
+          path: '/people',
+          name: 'people',
+          component: () => import('../views/dashboard/Utils/PersonListView.vue'),
+        },
+        {
+          path: '/roles',
+          name: 'roles',
+          component: () => import('../views/dashboard/Utils/RolesView.vue'),
+        },
+        {
+          path: '/permissions',
+          name: 'permissions',
+          component: () => import('../views/dashboard/Utils/PermissionsView.vue'),
+        },
+        {
+          path: '/modules',
+          name: 'modules',
+          component: () => import('../views/dashboard/Utils/ModulesView.vue'),
+        },
+        {
+          path: '/submodules',
+          name: 'submodules',
+          component: () => import('../views/dashboard/Utils/SubmodulesView.vue'),
+        },
+        {
+          path: '/groups',
+          name: 'groups',
+          component: () => import('../views/dashboard/Utils/GroupsView.vue'),
+        },
+        {
+          path: '/typedocs',
+          name: 'typedocs',
+          component: () => import('../views/dashboard/Utils/TypeDocumentsView.vue'),
+        },
       ]
     }   
   ]
