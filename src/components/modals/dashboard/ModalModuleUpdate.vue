@@ -1,52 +1,109 @@
 <script setup>
-import { ref, onMounted, computed, watch } from 'vue';
+import { ref, watch } from 'vue';
 import { useModalStore } from "@/stores/modal";
 import { useUtilsStore } from "@/stores/utils";
-import { usePersonStore } from '@/stores/person'
+import { getFullImageUrl } from "@/helpers/";
 
-const person = usePersonStore();
 const modal = useModalStore();
 const storeUtils = useUtilsStore();
 const error = ref("");
-const persons = ref([]);
-
-onMounted(async () => {
-  await person.getPersons();
-  persons.value = person.personsList;
-  console.log('persons: ', persons.value)
-});
+const iconPreview = ref("");
 
 const formData = ref({
   name: '',
-  acronym: '',
+  route: ''
 });
+
+const initializeFormData = () => {
+  const selectedModule = storeUtils.moduleSelected[0];
+
+  if (selectedModule) {
+    formData.value = {
+      name: selectedModule.name || "",
+      route: selectedModule.route || "",
+    };
+    iconPreview.value = getFullImageUrl(selectedModule.icon);
+  }
+};
+
+watch(
+  () => storeUtils.moduleSelected,
+  () => {
+    initializeFormData();
+  }
+);
+
+const fileInput = ref(null);
 
 function resetForm() {
   Object.keys(formData.value).forEach(key => {
     formData.value[key] = "";
   });
+  iconPreview.value = "";
+
+  if (fileInput.value) {
+    fileInput.value.value = null;
+  }
 }
 
 function validateFields(obj) {
   return Object.values(obj).some((value) => value === "");
 }
 
-async function createTypedocs() {
+async function updateModule() {
   if (validateFields(formData.value)) {
     showError("Complete all fields");
     return;
   }
 
   try {
-    await storeUtils.createTypedocs(formData.value);
-    resetForm();
-    modal.handleClickModalTypedocsAdd()
-  } catch (error) {
-    if (error.response && error.response.data && error.response.data.error) {
-      alert(error.response.data.error);
-    } else {
-      alert("Ocurrió un error al procesar la solicitud.");
+    const formDataUpload = new FormData();
+    formDataUpload.append('name', formData.value.name);
+    formDataUpload.append('route', formData.value.route);
+    if (fileInput.value.files[0]) {
+      formDataUpload.append('icon', fileInput.value.files[0]);
     }
+
+    const response = await storeUtils.moduleUpdate(storeUtils.moduleSelected[0].id, formDataUpload);
+    
+    if (response.status === 201) {
+      resetForm();
+      modal.handleClickModalModuleUpdate();
+    } else {
+      showError("Error creating module");
+    }
+  } catch (error) {
+    console.error("Error creating module:", error);
+    showError("Ocurrió un error al procesar la solicitud.");
+  }
+}
+
+function handleFileChange(event) {
+  const file = event.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      iconPreview.value = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+    else {
+    console.log('No file selected');
+  }
+}
+
+function handleDrop(event) {
+  event.preventDefault();
+  const file = event.dataTransfer.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      iconPreview.value = e.target.result;
+      if (fileInput.value) {
+        fileInput.value.files = event.dataTransfer.files;
+      }
+    };
+    reader.readAsDataURL(file);
   }
 }
 
@@ -59,27 +116,44 @@ const showError = (message) => {
 </script>
 
 <template>
-  <div class="modal" v-if="modal.modalTypedocsAdd">
+  <div class="modal" v-if="modal.modalModuleUpdate">
     <div class="modal__contenido">
       <div class="form__modal--content">
         <div class="header">
-          <button type="button" class="btn__closew" @click="modal.handleClickModalTypedocsAdd(), resetForm()">
+          <button type="button" class="btn__closew" @click="modal.handleClickModalModuleUpdate(), resetForm()">
             <img src="/icons/icon_close_line.svg" alt="Close windows" class="btn__icon__closew">
           </button>
         </div>
 
-        <h3 class="form__modal--title">Type documents Add</h3>
+        <h3 class="form__modal--title">Module Add</h3>
         <hr>
-        <form class="form__modal" @submit.prevent="createTypedocs">
+        <form class="form__modal" @submit.prevent="updateModule">
           <div class="form__modal--field">
             <label class="form__modal--label">Name: </label>
             <input class="form__modal--input" type="text" v-model="formData.name" />
-          </div>
+          </div>     
 
           <div class="form__modal--field">
-            <label class="form__modal--label">Acronym: </label>
-            <input class="form__modal--input" type="text" v-model="formData.acronym" />
-          </div>         
+            <label class="form__modal--label">Route: </label>
+            <input class="form__modal--input" type="text" v-model="formData.route" />
+          </div>
+
+          <div class="form__modal--field input__uploadImage">
+            <label for="fileInput" class="form__modal--label">Icon:</label>
+            <label for="fileInput" class="custom-file-upload" @dragover.prevent @drop="handleDrop">
+              <div class="drop-area" @dragover.prevent @drop="handleDrop">
+                <div v-if="!iconPreview" class="img__specieUploadPhoto">
+                  <img src="/icons/icon_upload_photo.svg" alt="Imagen de arrastre o clic" style="width: 50px; height: auto; margin-bottom: 5px" />
+                  <p style="padding: 0; margin: 0">Arrastra o selecciona un archivo</p>
+                </div>
+                <div v-else class="img__specieUploadPhotoSelect">
+                  <img class="img_specie_selected" :src="iconPreview" alt="Imagen seleccionada" />
+                  <p>{{ iconPreview }}</p>
+                </div>
+              </div>
+              <input id="fileInput" type="file" ref="fileInput" accept="image/*" @change="handleFileChange" />
+            </label>
+          </div>
 
           <hr>
 
@@ -264,5 +338,66 @@ const showError = (message) => {
 
 .form__modal--field {
   margin-bottom: 1rem;
+}
+
+/* Estilos para el diseño personalizado del input de archivo */
+.custom-file-upload {
+  display: inline-block;
+  cursor: pointer;
+}
+
+.drop-area {
+  position: relative;
+  width: 100%;
+  height: auto;
+  border: 2px dashed #ccc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+.drop-area img {
+  margin-bottom: 10px;
+}
+.input__uploadImage {
+  display: flex;
+  flex-direction: column;
+  /* align-items: center; */
+}
+
+.img__specieUploadPhotoSelect {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
+  word-break: break-all; /* Para romper la URL en palabras largas */
+}
+
+.img_specie_selected {
+  max-width: 100%;
+  max-height: 200px; /* Ajusta esto según sea necesario */
+  object-fit: contain; /* Asegura que la imagen se ajuste dentro del contenedor */
+  margin-bottom: 10px; /* Espaciado entre la imagen y el texto de la URL */
+}
+
+.img__specieUploadPhotoSelect p {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis; /* Añade puntos suspensivos si la URL es muy larga */
+  white-space: nowrap;
+}
+
+.img__specieUploadPhoto {
+  display: flex;
+  text-align: center;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+#fileInput {
+  display: none;
 }
 </style>

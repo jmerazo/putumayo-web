@@ -3,6 +3,8 @@ import { ref, onMounted } from 'vue';
 import { useUserStore } from '@/stores/users';
 import { useModalStore } from "@/stores/modal";
 import ModalUsersAdd from '@/components/modals/dashboard/ModalUsersAdd.vue';
+import ModalUsersUpdate from '@/components/modals/dashboard/ModalUsersUpdate.vue';
+import ModalUsersPassword from '@/components/modals/dashboard/ModalUsersPassword.vue';
 
 const store = useUserStore();
 const modal = useModalStore();
@@ -13,6 +15,20 @@ onMounted(async () => {
   users.value = store.usersList;
   console.log('users: ', users.value)
 });
+
+function deleteUser(id, uf, ul) {
+  const confirmDelete = window.confirm(
+    `¿Are you sure you want to delete the user ${uf + " " + ul}?`
+  );
+  if (!confirmDelete) {
+    return;
+  }
+  store.deleteUser(id).then(response => {
+    console.log(response.msg);
+  }).catch(error => {
+    console.error('Error deleting user:', error);
+  });
+}
 </script>
 
 <template>
@@ -51,13 +67,22 @@ onMounted(async () => {
           </ul>
         </details>
         <div class="btn__settingsUser">
-            <a href=""><img src="/icons/icon_edit.svg" class="icon__details"> </a>
-            <a href=""><img src="/icons/icon_delete.svg" class="icon__details"> </a>            
+            <a href="" @click.prevent="store.selectedUserPassword(user.id)">
+              <img src="/icons/icon_password_lock.svg" class="icon__details"> 
+            </a>
+            <a href="" @click.prevent="store.selectedUser(user.id)">
+              <img src="/icons/icon_edit.svg" class="icon__details"> 
+            </a>
+            <a href="#" @click.prevent="deleteUser(user.id, user.a_person.first_name, user.a_person.last_name)">
+                <img src="/icons/icon_delete.svg" class="icon__details">
+            </a>            
         </div>
       </div>
     </div>
   </div>
   <ModalUsersAdd/>
+  <ModalUsersUpdate/>
+  <ModalUsersPassword/>
 </template>
 
 <style scoped>

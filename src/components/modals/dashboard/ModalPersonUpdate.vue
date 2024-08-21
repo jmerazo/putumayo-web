@@ -1,25 +1,50 @@
 <script setup>
-import { ref, onMounted, computed, watch } from 'vue';
+import { ref, computed, watch } from 'vue';
+import { usePersonStore } from "@/stores/person";
 import { useModalStore } from "@/stores/modal";
 import { useUtilsStore } from "@/stores/utils";
-import { usePersonStore } from '@/stores/person'
 
 const person = usePersonStore();
 const modal = useModalStore();
 const storeUtils = useUtilsStore();
 const error = ref("");
-const persons = ref([]);
-
-onMounted(async () => {
-  await person.getPersons();
-  persons.value = person.personsList;
-  console.log('persons: ', persons.value)
-});
 
 const formData = ref({
-  name: '',
-  acronym: '',
+  p_doc_type: '',
+  doc_number: '',
+  first_name: '',
+  last_name: '',
+  email: '',
+  cellphone: '',
+  address: '',
+  p_department: '',
+  p_city: ''
 });
+
+const initializeFormData = () => {
+  const selectedPerson = person.personSelected[0];
+  console.log('selectedPerson: ', selectedPerson)
+  if (selectedPerson) {
+    formData.value = {
+      p_doc_type: selectedPerson.p_doc_type.id || "",
+      doc_number: selectedPerson.doc_number || "",
+      first_name: selectedPerson.first_name || "",
+      last_name: selectedPerson.last_name || "",
+      email: selectedPerson.email || "",
+      cellphone: selectedPerson.cellphone || "",
+      address: selectedPerson.address || "",
+      p_department: selectedPerson.p_department.id || "",
+      p_city: selectedPerson.p_city.id || "",
+    };
+  }
+};
+
+watch(
+  () => person.personSelected,
+  () => {
+    initializeFormData();
+  }
+);
 
 function resetForm() {
   Object.keys(formData.value).forEach(key => {
@@ -31,16 +56,18 @@ function validateFields(obj) {
   return Object.values(obj).some((value) => value === "");
 }
 
-async function createTypedocs() {
+async function personUpdate() {
   if (validateFields(formData.value)) {
     showError("Complete all fields");
     return;
   }
 
+  console.log('formdata: ', formData.value)
+
   try {
-    await storeUtils.createTypedocs(formData.value);
+    await person.personUpdate(person.personSelected[0].id, formData.value);
     resetForm();
-    modal.handleClickModalTypedocsAdd()
+    modal.handleClickModalPersonUpdate()
   } catch (error) {
     if (error.response && error.response.data && error.response.data.error) {
       alert(error.response.data.error);
@@ -49,6 +76,24 @@ async function createTypedocs() {
     }
   }
 }
+
+const filteredCities = computed(() => {
+  const { p_department } = formData.value;
+
+  if (p_department) {
+    const selectedDepartment = storeUtils.departments.find(
+      (department) => department.id === p_department
+    );
+
+    if (selectedDepartment) {
+      const filtered = storeUtils.cities.filter(
+        (city) => city.department_id === selectedDepartment.code
+      );
+      return filtered;
+    }
+  }
+  return [];
+});
 
 const showError = (message) => {
   error.value = message;
@@ -59,30 +104,80 @@ const showError = (message) => {
 </script>
 
 <template>
-  <div class="modal" v-if="modal.modalTypedocsAdd">
+  <div class="modal" v-if="modal.modalPersonUpdate">
     <div class="modal__contenido">
       <div class="form__modal--content">
         <div class="header">
-          <button type="button" class="btn__closew" @click="modal.handleClickModalTypedocsAdd(), resetForm()">
+          <button type="button" class="btn__closew" @click="modal.handleClickModalPersonUpdate(), resetForm()">
             <img src="/icons/icon_close_line.svg" alt="Close windows" class="btn__icon__closew">
           </button>
         </div>
 
-        <h3 class="form__modal--title">Type documents Add</h3>
+        <h3 class="form__modal--title">User Update</h3>
         <hr>
-        <form class="form__modal" @submit.prevent="createTypedocs">
+        <form class="form__modal" @submit.prevent="personUpdate">
           <div class="form__modal--field">
-            <label class="form__modal--label">Name: </label>
-            <input class="form__modal--input" type="text" v-model="formData.name" />
+            <label class="form__modal--label" for="usuario">Document Type: </label>
+            <select id="p_doc_type" class="form__modal--input" v-model="formData.p_doc_type">
+              <option value="" disabled>Select document type...</option>
+              <option v-for="td in storeUtils.typedocs" :key="td.id" :value="td.id">
+                {{ td.name }}
+              </option>
+            </select>
           </div>
 
           <div class="form__modal--field">
-            <label class="form__modal--label">Acronym: </label>
-            <input class="form__modal--input" type="text" v-model="formData.acronym" />
-          </div>         
+            <label class="form__modal--label">Document Number: </label>
+            <input class="form__modal--input" type="number" v-model="formData.doc_number" />
+          </div>
+
+          <div class="form__modal--field">
+            <label class="form__modal--label">First name: </label>
+            <input class="form__modal--input" type="text" v-model="formData.first_name" />
+          </div>
+
+          <div class="form__modal--field">
+            <label class="form__modal--label">Last name: </label>
+            <input class="form__modal--input" type="text" v-model="formData.last_name" />
+          </div>
+
+          <div class="form__modal--field">
+            <label class="form__modal--label">Email: </label>
+            <input class="form__modal--input" type="text" v-model="formData.email" />
+          </div>
+
+          <div class="form__modal--field">
+            <label class="form__modal--label">Cellphone: </label>
+            <input class="form__modal--input" type="text" v-model="formData.cellphone" />
+          </div>
+
+          <div class="form__modal--field">
+            <label class="form__modal--label">Address: </label>
+            <input class="form__modal--input" type="text" v-model="formData.address" />
+          </div>
+
+          <div class="form__modal--field">
+            <label class="form__modal--label" for="department">Department:</label>
+            <select id="department" class="form__modal--input" v-model="formData.p_department">
+              <option value="" selected disabled>Select department...</option>
+              <option v-for="d in storeUtils.departments" :key="d.id" :value="d.id">
+                {{ d.name }}
+              </option>
+            </select>
+          </div>
+
+          <div class="form__modal--field">
+            <label class="form__modal--label" for="city" v-show="filteredCities.length">City:</label>
+            <select id="city" class="form__modal--input" v-model="formData.p_city"
+              v-show="filteredCities.length">
+              <option value="" disabled selected>Select city...</option>
+              <option v-for="city in filteredCities" :key="city.id" :value="city.id">
+                {{ city.name }}
+              </option>
+            </select>
+          </div>
 
           <hr>
-
           <p class="msg__error" v-if="error">{{ error }}</p>
 
           <div class="container">

@@ -1,25 +1,32 @@
 <script setup>
-import { ref, onMounted, computed, watch } from 'vue';
+import { ref, watch } from 'vue';
 import { useModalStore } from "@/stores/modal";
 import { useUtilsStore } from "@/stores/utils";
-import { usePersonStore } from '@/stores/person'
 
-const person = usePersonStore();
 const modal = useModalStore();
 const storeUtils = useUtilsStore();
 const error = ref("");
-const persons = ref([]);
-
-onMounted(async () => {
-  await person.getPersons();
-  persons.value = person.personsList;
-  console.log('persons: ', persons.value)
-});
 
 const formData = ref({
-  name: '',
-  acronym: '',
+  name: ''
 });
+
+const initializeFormData = () => {
+  const selectedPermission = storeUtils.permissionSelected[0];
+
+  if (selectedPermission) {
+    formData.value = {
+      name: selectedPermission.name || "",
+    };
+  }
+};
+
+watch(
+  () => storeUtils.permissionSelected,
+  () => {
+    initializeFormData();
+  }
+);
 
 function resetForm() {
   Object.keys(formData.value).forEach(key => {
@@ -31,16 +38,16 @@ function validateFields(obj) {
   return Object.values(obj).some((value) => value === "");
 }
 
-async function createTypedocs() {
+async function updatePermission() {
   if (validateFields(formData.value)) {
     showError("Complete all fields");
     return;
   }
 
   try {
-    await storeUtils.createTypedocs(formData.value);
+    await storeUtils.permissionUpdate(storeUtils.permissionSelected[0].id, formData.value);
     resetForm();
-    modal.handleClickModalTypedocsAdd()
+    modal.handleClickModalPermissionUpdate()
   } catch (error) {
     if (error.response && error.response.data && error.response.data.error) {
       alert(error.response.data.error);
@@ -59,27 +66,22 @@ const showError = (message) => {
 </script>
 
 <template>
-  <div class="modal" v-if="modal.modalTypedocsAdd">
+  <div class="modal" v-if="modal.modalPermissionUpdate">
     <div class="modal__contenido">
       <div class="form__modal--content">
         <div class="header">
-          <button type="button" class="btn__closew" @click="modal.handleClickModalTypedocsAdd(), resetForm()">
+          <button type="button" class="btn__closew" @click="modal.handleClickModalPermissionUpdate(), resetForm()">
             <img src="/icons/icon_close_line.svg" alt="Close windows" class="btn__icon__closew">
           </button>
         </div>
 
-        <h3 class="form__modal--title">Type documents Add</h3>
+        <h3 class="form__modal--title">Permission Add</h3>
         <hr>
-        <form class="form__modal" @submit.prevent="createTypedocs">
+        <form class="form__modal" @submit.prevent="updatePermission">
           <div class="form__modal--field">
             <label class="form__modal--label">Name: </label>
             <input class="form__modal--input" type="text" v-model="formData.name" />
-          </div>
-
-          <div class="form__modal--field">
-            <label class="form__modal--label">Acronym: </label>
-            <input class="form__modal--input" type="text" v-model="formData.acronym" />
-          </div>         
+          </div>     
 
           <hr>
 

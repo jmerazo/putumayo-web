@@ -3,9 +3,24 @@ import { ref, onMounted } from 'vue';
 import { useModalStore } from "@/stores/modal";
 import { useUtilsStore } from '@/stores/utils'
 import ModalGroupAdd from '@/components/modals/dashboard/ModalGroupAdd.vue';
+import ModalGroupUpdate from '@/components/modals/dashboard/ModalGroupUpdate.vue';
 
 const modal = useModalStore();
 const utilsStore = useUtilsStore();
+
+function deleteGroup(id, mod) {
+  const confirmDelete = window.confirm(
+    `¿Are you sure you want to delete the group ${mod}?`
+  );
+  if (!confirmDelete) {
+    return;
+  }
+  utilsStore.deleteGroup(id).then(response => {
+    console.log(response.msg);
+  }).catch(error => {
+    console.error('Error deleting group:', error);
+  });
+}
 </script>
 
 <template>
@@ -28,13 +43,18 @@ const utilsStore = useUtilsStore();
           <h2>{{ g.name }}</h2>
         </div>
         <div class="btn__settingsUser">
-            <a href=""><img src="/icons/icon_edit.svg" class="icon__details"> </a>
-            <a href=""><img src="/icons/icon_delete.svg" class="icon__details"> </a>            
+            <a href="" @click.prevent="utilsStore.selectedGroup(g.id)">
+              <img src="/icons/icon_edit.svg" class="icon__details"> 
+            </a>
+            <a href="#" @click.prevent="deleteGroup(g.id, g.name)">
+                <img src="/icons/icon_delete.svg" class="icon__details">
+            </a>            
         </div>
       </div>
     </div>
   </div>
   <ModalGroupAdd/>
+  <ModalGroupUpdate/>
 </template>
 
 <style scoped>

@@ -3,9 +3,24 @@ import { ref, onMounted } from 'vue';
 import { useModalStore } from "@/stores/modal";
 import { useUtilsStore } from '@/stores/utils'
 import ModalPermissionAdd from '@/components/modals/dashboard/ModalPermissionAdd.vue';
+import ModalPermissionUpdate from '@/components/modals/dashboard/ModalPermissionUpdate.vue';
 
 const modal = useModalStore();
 const utilsStore = useUtilsStore();
+
+function deletePermission(id, p) {
+  const confirmDelete = window.confirm(
+    `¿Are you sure you want to delete the permission ${p}?`
+  );
+  if (!confirmDelete) {
+    return;
+  }
+  utilsStore.deletePermission(id).then(response => {
+    console.log(response.msg);
+  }).catch(error => {
+    console.error('Error deleting permission:', error);
+  });
+}
 </script>
 
 <template>
@@ -28,13 +43,18 @@ const utilsStore = useUtilsStore();
           <h2>{{ p.name }}</h2>
         </div>
         <div class="btn__settingsUser">
-            <a href=""><img src="/icons/icon_edit.svg" class="icon__details"> </a>
-            <a href=""><img src="/icons/icon_delete.svg" class="icon__details"> </a>            
+            <a href="" @click.prevent="utilsStore.selectedPermission(p.id)">
+              <img src="/icons/icon_edit.svg" class="icon__details"> 
+            </a>
+            <a href="#" @click.prevent="deletePermission(p.id, p.name)">
+                <img src="/icons/icon_delete.svg" class="icon__details">
+            </a>            
         </div>
       </div>
     </div>
   </div>
   <ModalPermissionAdd/>
+  <ModalPermissionUpdate/>
 </template>
 
 <style scoped>

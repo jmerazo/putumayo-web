@@ -18,8 +18,28 @@ onMounted(async () => {
 
 const formData = ref({
   name: '',
+  d_person: '',
   acronym: '',
 });
+
+const initializeFormData = () => {
+  const selectedDependencie = storeUtils.dependencieSelected[0];
+
+  if (selectedDependencie) {
+    formData.value = {
+      name: selectedDependencie.name || "",
+      d_person: selectedDependencie.d_person.id || "",
+      acronym: selectedDependencie.acronym || "",
+    };
+  }
+};
+
+watch(
+  () => storeUtils.dependencieSelected,
+  () => {
+    initializeFormData();
+  }
+);
 
 function resetForm() {
   Object.keys(formData.value).forEach(key => {
@@ -31,16 +51,18 @@ function validateFields(obj) {
   return Object.values(obj).some((value) => value === "");
 }
 
-async function createTypedocs() {
+async function dependencieUpdate() {
   if (validateFields(formData.value)) {
     showError("Complete all fields");
     return;
   }
 
+  console.log('formdata: ', formData.value)
+
   try {
-    await storeUtils.createTypedocs(formData.value);
+    await storeUtils.dependencieUpdate(storeUtils.dependencieSelected[0].id, formData.value);
     resetForm();
-    modal.handleClickModalTypedocsAdd()
+    modal.handleClickModalDependencieUpdate()
   } catch (error) {
     if (error.response && error.response.data && error.response.data.error) {
       alert(error.response.data.error);
@@ -59,21 +81,31 @@ const showError = (message) => {
 </script>
 
 <template>
-  <div class="modal" v-if="modal.modalTypedocsAdd">
+  <div class="modal" v-if="modal.modalDependencieUpdate">
     <div class="modal__contenido">
       <div class="form__modal--content">
         <div class="header">
-          <button type="button" class="btn__closew" @click="modal.handleClickModalTypedocsAdd(), resetForm()">
+          <button type="button" class="btn__closew" @click="modal.handleClickModalDependencieUpdate(), resetForm()">
             <img src="/icons/icon_close_line.svg" alt="Close windows" class="btn__icon__closew">
           </button>
         </div>
 
-        <h3 class="form__modal--title">Type documents Add</h3>
+        <h3 class="form__modal--title">Dependencie Update</h3>
         <hr>
-        <form class="form__modal" @submit.prevent="createTypedocs">
+        <form class="form__modal" @submit.prevent="dependencieUpdate">
           <div class="form__modal--field">
             <label class="form__modal--label">Name: </label>
             <input class="form__modal--input" type="text" v-model="formData.name" />
+          </div>
+
+          <div class="form__modal--field">
+            <label class="form__modal--label" for="a_rol">Asign user:</label>
+            <select id="d_person" class="form__modal--input" v-model="formData.d_person">
+              <option value="" selected disabled>Select person...</option>
+              <option v-for="p in persons" :key="p.id" :value="p.id">
+                {{ p.first_name + " " + p.last_name }}
+              </option>
+            </select>
           </div>
 
           <div class="form__modal--field">

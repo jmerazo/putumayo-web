@@ -2,8 +2,10 @@ import { defineStore } from 'pinia';
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import APIService from '../services/APIService';
+import { useModalStore } from "@/stores/modal";
 
 export const useUserStore = defineStore('userStore', () => {
+    const modal = useModalStore();
     const userData = ref(null);
     const errorAuth = ref(null);
     const authActive = ref(false);
@@ -13,15 +15,18 @@ export const useUserStore = defineStore('userStore', () => {
     const accessToken = ref(localStorage.getItem('access_token'));
     const refreshToken = ref(localStorage.getItem('refresh_token'));
     const usersList = ref([]);
+    const userSelected = ref('');
+    const usersOriginalList = ref([]);
+    const userSelectedPassword = ref('');
 
     const router = useRouter();
 
     const isRehydrated = ref(false);
 
-    /* onMounted(async () => {
+    onMounted(async () => {
       isAuth();
-      await rehydrateAuth();
-    }); */
+      /* await rehydrateAuth(); */
+    });
 
     const rehydrateAuth = async () => {
       if (refreshToken.value) {
@@ -48,16 +53,19 @@ export const useUserStore = defineStore('userStore', () => {
         isLoadingPermissions.value = true;  // Comienza la carga
         try {
           const response = await APIService.getUserData(id); // Asume que este método realiza la llamada API al endpoint
+          console.log('response permission: ', response)
           if (response.status === 200) {
             userPermissions.value = response.data;
             console.log('user modules: ', userPermissions.value )
             localStorage.setItem('user_permissions', JSON.stringify(response.data));
           } else {
+            console.log('estoy aqui en error')
             console.error('Error al cargar los permisos del usuario:', response.statusText);
           }
         } catch (error) {
           console.error('Error al realizar la solicitud de permisos:', error);
         } finally {
+          console.log('estoy aqui en false')
           isLoadingPermissions.value = false;  // Finaliza la carga
         }
     };
@@ -75,7 +83,8 @@ export const useUserStore = defineStore('userStore', () => {
             localStorage.setItem('user_data', JSON.stringify(response.data.authId));
             localStorage.setItem('access_token', response.data.access);
             localStorage.setItem('refresh_token', response.data.refresh);
-            await loadUserPermissions(response.data.authId); 
+            const rp = await loadUserPermissions(response.data.authId); 
+            console.log('rp: ', rp)
             return { success: true };
           } else {
             errorAuth.value = 'Credenciales incorrectas';
@@ -93,6 +102,7 @@ export const useUserStore = defineStore('userStore', () => {
         const response = await APIService.getUsers();
         if (response.status === 200) {
           usersList.value = response.data;
+          usersOriginalList.value = response.data;
         } else {
           return { success: false };
         }
@@ -118,6 +128,53 @@ export const useUserStore = defineStore('userStore', () => {
       } catch (error) {
         console.log('error create user: ', error)
         throw error;
+      }
+    }
+
+    function selectedUser(id) {
+      userSelected.value =  usersList.value.filter(user => user.id === id)
+      modal.handleClickModalUserUpdate(userSelected.value); 
+    }
+  
+    const userUpdate = async (id, data) => {
+      const userIndex = usersList.value.findIndex((u) => u.id === id);
+      if (userIndex !== -1) {
+          Object.assign(usersList.value[userIndex], data);
+          const response = await APIService.updateUser(id, data);
+          return response; // Devuelve la respuesta completa
+      } else {
+          console.error(`User con ID ${id} no encontrada.`);
+      }
+    };
+
+    function selectedUserPassword(id) {
+      userSelectedPassword.value = id;
+      console.log('userSelectedPassword: ', userSelectedPassword.value)
+      modal.handleClickModalUserPassword(); 
+    }
+
+    const passwordUserUpdate = async (newPassword) => {
+      const response = await APIService.updatePasswordUser(userSelectedPassword.value, newPassword);
+      return response; // Devuelve la respuesta completa
+    };
+
+    async function deleteUser(pk) {
+      console.log('pk: ', pk)
+      const indexToDelete = usersList.value.findIndex(item => item.id === pk);
+    
+      if (indexToDelete === -1) {
+        return { msg: "User not found" };
+      }
+
+      try {
+        const response = await APIService.deleteUser(pk); // Realiza la solicitud DELETE al backend
+        console.log('deleteUser response:', response);
+        usersList.value.splice(indexToDelete, 1); // Elimina al usuario de la lista local
+        console.log('User deleted successfully');
+        return { msg: "User deleted successfully" };
+      } catch (error) {
+        console.error('Error deleting user:', error.response || error.message || error);
+        return { msg: "Error deleting user", details: error.response || error.message || error };
       }
     }
 
@@ -162,6 +219,12 @@ export const useUserStore = defineStore('userStore', () => {
       refreshToken,
       getUsers,
       usersList,
-      createUser
+      createUser,
+      deleteUser,
+      userSelected,
+      selectedUser,
+      userUpdate,
+      selectedUserPassword,
+      passwordUserUpdate
     };
 });

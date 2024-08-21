@@ -2,10 +2,24 @@
 import { useModalStore } from "@/stores/modal";
 import { useUtilsStore } from "@/stores/utils";
 import ModalDependencieAdd from '@/components/modals/dashboard/ModalDependencieAdd.vue';
+import ModalDependencieUpdate from '@/components/modals/dashboard/ModalDependencieUpdate.vue';
 
 const modal = useModalStore();
 const utilsStore = useUtilsStore();
 
+function deleteDependencie(id, dep) {
+  const confirmDelete = window.confirm(
+    `¿Are you sure you want to delete the dependencie ${dep}?`
+  );
+  if (!confirmDelete) {
+    return;
+  }
+  utilsStore.deleteDependencie(id).then(response => {
+    console.log(response.msg);
+  }).catch(error => {
+    console.error('Error deleting dependencie:', error);
+  });
+}
 </script>
 
 <template>
@@ -30,13 +44,18 @@ const utilsStore = useUtilsStore();
           <p class="txt__email">{{ d.acronym }}</p>
         </div>
         <div class="btn__settingsUser">
-            <a href=""><img src="/icons/icon_edit.svg" class="icon__details"> </a>
-            <a href=""><img src="/icons/icon_delete.svg" class="icon__details"> </a>            
+            <a href="" @click.prevent="utilsStore.selectedDependencie(d.id)">
+              <img src="/icons/icon_edit.svg" class="icon__details"> 
+            </a>
+            <a href="#" @click.prevent="deleteDependencie(d.id, d.name)">
+                <img src="/icons/icon_delete.svg" class="icon__details">
+            </a>              
         </div>
       </div>
     </div>
   </div>
   <ModalDependencieAdd/>
+  <ModalDependencieUpdate/>
 </template>
 
 <style scoped>

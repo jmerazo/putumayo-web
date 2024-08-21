@@ -3,9 +3,24 @@ import { ref, onMounted } from 'vue';
 import { useModalStore } from "@/stores/modal";
 import { useUtilsStore } from '@/stores/utils'
 import ModalRoleAdd from '@/components/modals/dashboard/ModalRoleAdd.vue';
+import ModalRoleUpdate from '@/components/modals/dashboard/ModalRoleUpdate.vue';
 
 const modal = useModalStore();
 const utilsStore = useUtilsStore();
+
+function deleteRole(id, r) {
+  const confirmDelete = window.confirm(
+    `¿Are you sure you want to delete the role ${r}?`
+  );
+  if (!confirmDelete) {
+    return;
+  }
+  utilsStore.deleteRol(id).then(response => {
+    console.log(response.msg);
+  }).catch(error => {
+    console.error('Error deleting role:', error);
+  });
+}
 </script>
 
 <template>
@@ -28,13 +43,18 @@ const utilsStore = useUtilsStore();
           <h2>{{ r.name }}</h2>
         </div>
         <div class="btn__settingsUser">
-            <a href=""><img src="/icons/icon_edit.svg" class="icon__details"> </a>
-            <a href=""><img src="/icons/icon_delete.svg" class="icon__details"> </a>            
+            <a href="" @click.prevent="utilsStore.selectedRol(r.id)">
+              <img src="/icons/icon_edit.svg" class="icon__details"> 
+            </a>
+            <a href="#" @click.prevent="deleteRole(r.id, r.name)">
+                <img src="/icons/icon_delete.svg" class="icon__details">
+            </a>            
         </div>
       </div>
     </div>
   </div>
   <ModalRoleAdd/>
+  <ModalRoleUpdate/>
 </template>
 
 <style scoped>

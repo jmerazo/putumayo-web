@@ -3,9 +3,23 @@ import { useModalStore } from "@/stores/modal";
 import { useUtilsStore } from '@/stores/utils';
 import { getFullImageUrl } from "@/helpers/";
 import ModalSubmoduleAdd from '@/components/modals/dashboard/ModalSubmoduleAdd.vue';
+import ModalSubmoduleUpdate from '@/components/modals/dashboard/ModalSubmoduleUpdate.vue';
 
 const modal = useModalStore();
 const utilsStore = useUtilsStore();
+function deleteSubmodule(id, mod) {
+  const confirmDelete = window.confirm(
+    `¿Are you sure you want to delete the submodule ${mod}?`
+  );
+  if (!confirmDelete) {
+    return;
+  }
+  utilsStore.deleteSubmodule(id).then(response => {
+    console.log(response.msg);
+  }).catch(error => {
+    console.error('Error deleting submodule:', error);
+  });
+}
 </script>
 
 <template>
@@ -30,13 +44,18 @@ const utilsStore = useUtilsStore();
           <span class="icons__vsub"><img class="icon__submodules" src="/icons/icon_route.svg"> {{ s.route }}</span>
         </div>
         <div class="btn__settingsUser">
-            <a href=""><img src="/icons/icon_edit.svg" class="icon__details"> </a>
-            <a href=""><img src="/icons/icon_delete.svg" class="icon__details"> </a>            
+            <a href="" @click.prevent="utilsStore.selectedSubmodule(s.id)">
+              <img src="/icons/icon_edit.svg" class="icon__details"> 
+            </a>
+            <a href="#" @click.prevent="deleteSubmodule(s.id, s.name)">
+                <img src="/icons/icon_delete.svg" class="icon__details">
+            </a>              
         </div>
       </div>
     </div>
   </div>
   <ModalSubmoduleAdd/>
+  <ModalSubmoduleUpdate/>
 </template>
 
 <style scoped>

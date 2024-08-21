@@ -3,9 +3,24 @@ import { useModalStore } from "@/stores/modal";
 import { useUtilsStore } from '@/stores/utils';
 import { getFullImageUrl } from "@/helpers/";
 import ModalModuleAdd from '@/components/modals/dashboard/ModalModuleAdd.vue';
+import ModalModuleUpdate from '@/components/modals/dashboard/ModalModuleUpdate.vue';
 
 const modal = useModalStore();
 const utilsStore = useUtilsStore();
+
+function deleteModule(id, mod) {
+  const confirmDelete = window.confirm(
+    `¿Are you sure you want to delete the module ${mod}?`
+  );
+  if (!confirmDelete) {
+    return;
+  }
+  utilsStore.deleteModule(id).then(response => {
+    console.log(response.msg);
+  }).catch(error => {
+    console.error('Error deleting module:', error);
+  });
+}
 </script>
 
 <template>
@@ -29,13 +44,18 @@ const utilsStore = useUtilsStore();
           <span>Route: {{ m.route }}</span>
         </div>
         <div class="btn__settingsUser">
-            <a href=""><img src="/icons/icon_edit.svg" class="icon__details"> </a>
-            <a href=""><img src="/icons/icon_delete.svg" class="icon__details"> </a>            
+            <a href="" @click.prevent="utilsStore.selectedModule(m.id)">
+              <img src="/icons/icon_edit.svg" class="icon__details"> 
+            </a>
+            <a href="#" @click.prevent="deleteModule(m.id, m.name)">
+                <img src="/icons/icon_delete.svg" class="icon__details">
+            </a>             
         </div>
       </div>
     </div>
   </div>
   <ModalModuleAdd/>
+  <ModalModuleUpdate/>
 </template>
 
 <style scoped>

@@ -8,7 +8,7 @@ export default {
     getLogin(credentials, authType){
         return api.post('/auth/token/access/', { ...credentials, authType });
     },
-    getUserData(id){
+    getUserData(id) {
         return api.get(`/auth/permissions/${id}`)
     },
     refreshAuthToken(refreshToken){
@@ -19,6 +19,15 @@ export default {
     },
     createUser(data){
         return api.post(`/auth/register/`, data)
+    },
+    updateUser(pk, data){
+        return api.put(`/auth/permissions/${pk}`, data)
+    },
+    updatePasswordUser(pk, newPassword){
+        return api.put(`/auth/password/${pk}`, newPassword)
+    },
+    deleteUser(pk){
+        return api.delete(`/auth/users/${pk}`)
     },
     /* ==================================================================================================================== */
     /* ==================================================================================================================== */
@@ -36,11 +45,11 @@ export default {
     createTypeDocuments(data){
         return api.post(`/utils/typedocs/`, data)
     },
-    updateTypeDocuments(id, data){
-        return api.post(`/utils/typedocs/${id}`, data)
+    updateTypeDocument(id, data){
+        return api.put(`/utils/typedocs/${id}`, data)
     },
-    deleteTypeDocuments(id){
-        return api.post(`/utils/typedocs/${id}`)
+    deleteTypeDocument(id){
+        return api.delete(`/utils/typedocs/${id}`)
     },
     /* ============================================== */
     getRoles(){
@@ -49,11 +58,11 @@ export default {
     createRoles(data){
         return api.post(`/utils/roles/`, data)
     },
-    updateRoles(id, data){
-        return api.post(`/utils/roles/${id}`, data)
+    updateRol(id, data){
+        return api.put(`/utils/roles/${id}`, data)
     },
-    deleteRoles(id){
-        return api.post(`/utils/roles/${id}`)
+    deleteRol(id){
+        return api.delete(`/utils/roles/${id}`)
     },
     /* =============================================== */
     getGroups(){
@@ -62,11 +71,11 @@ export default {
     createGroups(data){
         return api.post(`/utils/groups/`, data)
     },
-    updateGroups(id, data){
-        return api.post(`/utils/groups/${id}`, data)
+    updateGroup(id, data){
+        return api.put(`/utils/groups/${id}`, data)
     },
-    deleteGroups(id){
-        return api.post(`/utils/groups/${id}`)
+    deleteGroup(id){
+        return api.delete(`/utils/groups/${id}`)
     },
     /* =============================================== */
     getModules(){
@@ -79,11 +88,11 @@ export default {
             },
         })
     },
-    updateModules(id, data){
-        return api.post(`/utils/modules/${id}`, data)
+    updateModule(id, data){
+        return api.put(`/utils/modules/${id}`, data)
     },
-    deleteModules(id){
-        return api.post(`/utils/modules/${id}`)
+    deleteModule(id){
+        return api.delete(`/utils/modules/${id}`)
     },
     /* =============================================== */
     getSubmodules(){
@@ -96,11 +105,11 @@ export default {
             },
         })
     },
-    updateSubmodules(id, data){
-        return api.post(`/utils/submodules/${id}`, data)
+    updateSubmodule(id, data){
+        return api.put(`/utils/submodules/${id}`, data)
     },
-    deleteSubmodules(id){
-        return api.post(`/utils/submodules/${id}`)
+    deleteSubmodule(id){
+        return api.delete(`/utils/submodules/${id}`)
     },
     /* =============================================== */
     getPermissions(){
@@ -109,11 +118,11 @@ export default {
     createPermissions(data){
         return api.post(`/utils/permissions/`, data)
     },
-    updatePermissions(id, data){
-        return api.post(`/utils/permissions/${id}`, data)
+    updatePermission(id, data){
+        return api.put(`/utils/permissions/${id}`, data)
     },
-    deletePermissions(id){
-        return api.post(`/utils/permissions/${id}`)
+    deletePermission(id){
+        return api.delete(`/utils/permissions/${id}`)
     },
     /* =============================================== */
     getDependencies(){
@@ -123,11 +132,12 @@ export default {
         return api.post(`/utils/dependencies/`, data)
     },
     updateDependencies(id, data){
-        return api.post(`/utils/dependencies/${id}`, data)
+        return api.put(`/utils/dependencies/${id}`, data)
     },
     deleteDependencies(id){
-        return api.post(`/utils/dependencies/${id}`)
+        return api.delete(`/utils/dependencies/${id}`)
     },
+    /* =============================================== */
     getSubdependencies(){
         return api.get(`/utils/subdependencies/`)
     },
@@ -135,10 +145,10 @@ export default {
         return api.post(`/utils/subdependencies/`, data)
     },
     updateSubdependencies(id, data){
-        return api.post(`/utils/subdependencies/${id}`, data)
+        return api.put(`/utils/subdependencies/${id}`, data)
     },
     deleteSubdependencies(id){
-        return api.post(`/utils/subdependencies/${id}`)
+        return api.delete(`/utils/subdependencies/${id}`)
     },
     /* ==================================================================================================================== */
     /* ==================================================================================================================== */
@@ -151,9 +161,9 @@ export default {
         return api.post(`/person/`, data)
     },
     updatePerson(id, data){
-        return api.post(`/person/${id}`, data)
+        return api.put(`/person/${id}`, data)
     },
     deletePerson(id){
-        return api.post(`/person/${id}`)
+        return api.delete(`/person/${id}`)
     },
 }

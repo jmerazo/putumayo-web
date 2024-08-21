@@ -1,24 +1,25 @@
 <script setup>
-import { ref, onMounted, computed, watch } from 'vue';
+import { ref, computed, watch } from 'vue';
+import { useUserStore } from "@/stores/users";
 import { useModalStore } from "@/stores/modal";
 import { useUtilsStore } from "@/stores/utils";
-import { usePersonStore } from '@/stores/person'
 
-const person = usePersonStore();
+const storeUser = useUserStore();
 const modal = useModalStore();
-const storeUtils = useUtilsStore();
 const error = ref("");
-const persons = ref([]);
-
-onMounted(async () => {
-  await person.getPersons();
-  persons.value = person.personsList;
-  console.log('persons: ', persons.value)
-});
+const showPassword = ref(false);
+const showConfirmPassword = ref(false);
+const passwordMatch = ref(true);
 
 const formData = ref({
-  name: '',
-  acronym: '',
+  password: '',
+  confirm_password: '',
+});
+
+watch(() => formData.value.confirm_password, () => {
+  if (formData.value.confirm_password !== '') {
+    passwordMatchClass.value;
+  }
 });
 
 function resetForm() {
@@ -31,17 +32,22 @@ function validateFields(obj) {
   return Object.values(obj).some((value) => value === "");
 }
 
-async function createTypedocs() {
+async function passwordUserUpdate() {
   if (validateFields(formData.value)) {
     showError("Complete all fields");
     return;
   }
 
+  console.log('data save user: ', formData.value)
+
   try {
-    await storeUtils.createTypedocs(formData.value);
-    resetForm();
-    modal.handleClickModalTypedocsAdd()
+    const response = await storeUser.passwordUserUpdate(formData.value);
+    if(response.status === 200){
+      resetForm();
+      modal.handleClickModalUserPassword()
+    }    
   } catch (error) {
+    console.log('error modal: ', error)
     if (error.response && error.response.data && error.response.data.error) {
       alert(error.response.data.error);
     } else {
@@ -56,30 +62,61 @@ const showError = (message) => {
     error.value = null;
   }, 3000);
 };
+
+function toggleShowPassword() {
+  showPassword.value = !showPassword.value;
+}
+
+function toggleShowConfirmPassword() {
+  showConfirmPassword.value = !showConfirmPassword.value;
+}
+
+function checkPasswordMatch() {
+  passwordMatch.value = formData.value.password === formData.value.confirm_password;
+}
+
+const passwordMatchClass = computed(() => {
+  if (formData.value.confirm_password === '') {
+    return 'underline-neutral';
+  }
+  return passwordMatch.value ? 'underline-match' : 'underline-mismatch';
+});
 </script>
 
 <template>
-  <div class="modal" v-if="modal.modalTypedocsAdd">
+  <div class="modal" v-if="modal.modalUserPassword">
     <div class="modal__contenido">
       <div class="form__modal--content">
         <div class="header">
-          <button type="button" class="btn__closew" @click="modal.handleClickModalTypedocsAdd(), resetForm()">
+          <button type="button" class="btn__closew" @click="modal.handleClickModalUserAdd(), resetForm()">
             <img src="/icons/icon_close_line.svg" alt="Close windows" class="btn__icon__closew">
           </button>
         </div>
 
-        <h3 class="form__modal--title">Type documents Add</h3>
+        <h3 class="form__modal--title">User Password Update</h3>
         <hr>
-        <form class="form__modal" @submit.prevent="createTypedocs">
+        <form class="form__modal" @submit.prevent="passwordUserUpdate">
           <div class="form__modal--field">
-            <label class="form__modal--label">Name: </label>
-            <input class="form__modal--input" type="text" v-model="formData.name" />
+            <label class="form__modal--label">Password: </label>
+            <div class="password-container">
+              <input class="form__modal--input" :type="showPassword ? 'text' : 'password'" v-model="formData.password" />
+              <button type="button" class="btn__toggle" @click="toggleShowPassword">
+                <img :src="showPassword ? '/icons/icon_eye_off.svg' : '/icons/icon_eye.svg'" class="btn__icon__toggle" />
+              </button>
+            </div>
+            <div :class="passwordMatchClass"></div>
           </div>
 
           <div class="form__modal--field">
-            <label class="form__modal--label">Acronym: </label>
-            <input class="form__modal--input" type="text" v-model="formData.acronym" />
-          </div>         
+            <label class="form__modal--label">Confirm Password: </label>
+            <div class="password-container">
+              <input class="form__modal--input" :type="showConfirmPassword ? 'text' : 'password'" v-model="formData.confirm_password" @input="checkPasswordMatch" />
+              <button type="button" class="btn__toggle" @click="toggleShowConfirmPassword">
+                <img :src="showConfirmPassword ? '/icons/icon_eye_off.svg' : '/icons/icon_eye.svg'" class="btn__icon__toggle" />
+              </button>
+            </div>
+            <div :class="passwordMatchClass"></div>
+          </div>
 
           <hr>
 

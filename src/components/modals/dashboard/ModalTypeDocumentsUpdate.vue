@@ -21,6 +21,25 @@ const formData = ref({
   acronym: '',
 });
 
+const initializeFormData = () => {
+  const selectedTypedoc = storeUtils.typedocSelected[0];
+
+  if (selectedTypedoc) {
+    formData.value = {
+      name: selectedTypedoc.name || "",
+      acronym: selectedTypedoc.acronym || ""
+    };
+  }
+};
+
+watch(
+  () => storeUtils.typedocSelected,
+  () => {
+    initializeFormData();
+  }
+);
+
+
 function resetForm() {
   Object.keys(formData.value).forEach(key => {
     formData.value[key] = "";
@@ -31,16 +50,16 @@ function validateFields(obj) {
   return Object.values(obj).some((value) => value === "");
 }
 
-async function createTypedocs() {
+async function updateTypedocs() {
   if (validateFields(formData.value)) {
     showError("Complete all fields");
     return;
   }
 
   try {
-    await storeUtils.createTypedocs(formData.value);
+    await storeUtils.typedocUpdate(storeUtils.typedocSelected[0].id, formData.value);
     resetForm();
-    modal.handleClickModalTypedocsAdd()
+    modal.handleClickModalTypedocsUpdate()
   } catch (error) {
     if (error.response && error.response.data && error.response.data.error) {
       alert(error.response.data.error);
@@ -59,18 +78,18 @@ const showError = (message) => {
 </script>
 
 <template>
-  <div class="modal" v-if="modal.modalTypedocsAdd">
+  <div class="modal" v-if="modal.modalTypedocsUpdate">
     <div class="modal__contenido">
       <div class="form__modal--content">
         <div class="header">
-          <button type="button" class="btn__closew" @click="modal.handleClickModalTypedocsAdd(), resetForm()">
+          <button type="button" class="btn__closew" @click="modal.handleClickModalTypedocsUpdate(), resetForm()">
             <img src="/icons/icon_close_line.svg" alt="Close windows" class="btn__icon__closew">
           </button>
         </div>
 
         <h3 class="form__modal--title">Type documents Add</h3>
         <hr>
-        <form class="form__modal" @submit.prevent="createTypedocs">
+        <form class="form__modal" @submit.prevent="updateTypedocs">
           <div class="form__modal--field">
             <label class="form__modal--label">Name: </label>
             <input class="form__modal--input" type="text" v-model="formData.name" />

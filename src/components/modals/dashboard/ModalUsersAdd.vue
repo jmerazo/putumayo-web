@@ -31,8 +31,14 @@ const formData = ref({
   ump_module: [],
   dependencie: '',
   subdependencie: '',
-  module_permissions: {}
+  module_permissions: {},
+  submodule_permissions: {},
+  selected_submodules: {}
 });
+
+console.log('formData inicializado:', formData.value); 
+
+const submodulesInit = ref([]);
 
 watch(() => formData.value.confirm_password, () => {
   if (formData.value.confirm_password !== '') {
@@ -113,7 +119,7 @@ const filteredSubs = computed(() => {
 
   if (dependencie) {
     const filtered = storeUtils.subdependencies.filter(
-      (sub) => sub.dependencie === dependencie
+      (sub) => sub.dependencie.id === dependencie
     );
     return filtered;
   }
@@ -131,22 +137,35 @@ const passwordMatchClass = computed(() => {
   return passwordMatch.value ? 'underline-match' : 'underline-mismatch';
 });
 
-function toggleSelection(event, field, value) {
-  event.preventDefault();
-  const index = formData.value[field].indexOf(value);
-  if (index > -1) {
-    formData.value[field].splice(index, 1);
-    if (field === 'ump_module') {
-      delete formData.value.module_permissions[value]; // Eliminar permisos al deseleccionar módulo
-    }
-  } else {
-    formData.value[field].push(value);
-    if (field === 'ump_module') {
-      formData.value.module_permissions[value] = []; // Inicializar permisos para el módulo seleccionado
-    }
-  }
+function getModuleName(moduleId) {
+  const module = storeUtils.modules.find(m => m.id === moduleId);
+  return module ? module.name : 'Unknown Module';
 }
 
+// Función para obtener submódulos por módulo
+function getSubmodulesByModule(moduleId) {
+  return storeUtils.submodules.filter(submodule => submodule.sm_module.id === moduleId);
+}
+
+// Función para alternar la selección de módulos
+function toggleModuleSelection(event, moduleId) {
+  event.preventDefault();
+  const index = formData.value.ump_module.indexOf(moduleId);
+
+  if (index > -1) {
+    // Deseleccionar módulo
+    formData.value.ump_module.splice(index, 1);
+    delete formData.value.module_permissions[moduleId];
+    delete formData.value.selected_submodules[moduleId];
+    delete formData.value.submodule_permissions[moduleId];
+  } else {
+    // Seleccionar módulo
+    formData.value.ump_module.push(moduleId);
+    formData.value.module_permissions[moduleId] = [];
+    formData.value.selected_submodules[moduleId] = getSubmodulesByModule(moduleId);
+    formData.value.submodule_permissions[moduleId] = {};
+  }
+}
 function togglePermission(moduleId, permissionId) {
   const permissions = formData.value.module_permissions[moduleId];
   const index = permissions.indexOf(permissionId);
@@ -157,9 +176,41 @@ function togglePermission(moduleId, permissionId) {
   }
 }
 
-function getModuleName(moduleId) {
-  const module = storeUtils.modules.find(m => m.id === moduleId);
-  return module ? module.name : 'Unknown Module';
+// Función para alternar la selección de submódulos
+function toggleSubmoduleSelection(event, moduleId, submoduleId) {
+  event.preventDefault();
+  const submodules = formData.value.selected_submodules[moduleId];
+  const index = submodules.indexOf(submoduleId);
+
+  if (index > -1) {
+    // Deseleccionar submódulo
+    submodules.splice(index, 1);
+    delete formData.value.submodule_permissions[moduleId][submoduleId];
+  } else {
+    // Seleccionar submódulo
+    submodules.push(submoduleId);
+    if (!formData.value.submodule_permissions[moduleId][submoduleId]) {
+      formData.value.submodule_permissions[moduleId][submoduleId] = [];
+    }
+  }
+}
+
+// Función para alternar la selección de permisos de submódulos
+function toggleSubmodulePermission(moduleId, submoduleId, permissionId) {
+  const permissions = formData.value.submodule_permissions[moduleId][submoduleId];
+  const index = permissions.indexOf(permissionId);
+  if (index > -1) {
+    permissions.splice(index, 1);
+  } else {
+    permissions.push(permissionId);
+  }
+}
+
+function getSubmoduleName(submoduleId) {
+  // Convertir submoduleId a un número antes de buscar
+  const idToSearch = Number(submoduleId);
+  const submodule = storeUtils.submodules.find(s => s.id === idToSearch);
+  return submodule ? submodule.name : 'Unknown Submodule';
 }
 </script>
 
@@ -319,7 +370,7 @@ function getModuleName(moduleId) {
                 :key="m.id"
                 :value="m.id"
                 :class="{ selected: formData.ump_module.includes(m.id) }"
-                @click="toggleSelection($event, 'ump_module', m.id)"
+                @click="toggleModuleSelection($event, m.id)"
               >
                 {{ m.name }}
               </option>
@@ -336,12 +387,50 @@ function getModuleName(moduleId) {
                   v-for="p in storeUtils.permissions"
                   :key="p.id"
                   :value="p.id"
-                  :class="{ selected: formData.module_permissions[moduleId].includes(p.id) }"
+                  :class="{ selected: (formData.module_permissions[moduleId] || []).includes(p.id) }"
                   @click.prevent="togglePermission(moduleId, p.id)"
                 >
                   {{ p.name }}
                 </option>
               </select>
+            </div>
+
+            <div v-if="formData.selected_submodules[moduleId] && formData.selected_submodules[moduleId].length > 0">
+              <h5>Submodules</h5>
+              <div class="form__modal--field">
+                <label class="form__modal--label" for="ump_submodule">Submodules:</label>
+                <select id="ump_submodule" class="form__modal--input" multiple>
+                  <option value="" disabled>Select submodules...</option>
+                  <option
+                    v-for="s in getSubmodulesByModule(moduleId)"
+                    :key="s.id"
+                    :value="s.id"
+                    :class="{ selected: formData.selected_submodules[moduleId] && formData.selected_submodules[moduleId].includes(s.id) }"
+                    @click.prevent="toggleSubmoduleSelection($event, moduleId, s.id)"
+                  >
+                    {{ s.name }}
+                  </option>
+                </select>
+              </div>
+
+              <div v-for="(subPermissions, submoduleId) in (formData.submodule_permissions[moduleId] || {})" :key="submoduleId" class="submodule-permissions">
+                <h5>{{ getSubmoduleName(submoduleId) }}</h5>
+                <div class="form__modal--field">
+                  <label class="form__modal--label" for="ump_subpermission">Submodule Permissions:</label>
+                  <select id="ump_subpermission" class="form__modal--input" multiple>
+                    <option value="" disabled>Select permissions...</option>
+                    <option
+                      v-for="p in storeUtils.permissions"
+                      :key="p.id"
+                      :value="p.id"
+                      :class="{ selected: subPermissions.includes(p.id) }"
+                      @click.prevent="toggleSubmodulePermission(moduleId, submoduleId, p.id)"
+                    >
+                      {{ p.name }}
+                    </option>
+                  </select>
+                </div>
+              </div>
             </div>
           </div>
 

@@ -1,25 +1,36 @@
 <script setup>
-import { ref, onMounted, computed, watch } from 'vue';
+import { ref, watch } from 'vue';
 import { useModalStore } from "@/stores/modal";
 import { useUtilsStore } from "@/stores/utils";
-import { usePersonStore } from '@/stores/person'
 
-const person = usePersonStore();
 const modal = useModalStore();
 const storeUtils = useUtilsStore();
 const error = ref("");
-const persons = ref([]);
-
-onMounted(async () => {
-  await person.getPersons();
-  persons.value = person.personsList;
-  console.log('persons: ', persons.value)
-});
 
 const formData = ref({
   name: '',
+  dependencie: '',
   acronym: '',
 });
+
+const initializeFormData = () => {
+  const selectedSubdependencie = storeUtils.subdependencieSelected[0];
+
+  if (selectedSubdependencie) {
+    formData.value = {
+      name: selectedSubdependencie.name || "",
+      dependencie: selectedSubdependencie.dependencie.id || "",
+      acronym: selectedSubdependencie.acronym || "",
+    };
+  }
+};
+
+watch(
+  () => storeUtils.subdependencieSelected,
+  () => {
+    initializeFormData();
+  }
+);
 
 function resetForm() {
   Object.keys(formData.value).forEach(key => {
@@ -31,16 +42,18 @@ function validateFields(obj) {
   return Object.values(obj).some((value) => value === "");
 }
 
-async function createTypedocs() {
+async function updateSubdependencie() {
   if (validateFields(formData.value)) {
     showError("Complete all fields");
     return;
   }
 
+  console.log('formData.value', formData.value)
+
   try {
-    await storeUtils.createTypedocs(formData.value);
+    await storeUtils.subdependencieUpdate(storeUtils.subdependencieSelected[0].id, formData.value);
     resetForm();
-    modal.handleClickModalTypedocsAdd()
+    modal.handleClickModalSubdependencieUpdate()
   } catch (error) {
     if (error.response && error.response.data && error.response.data.error) {
       alert(error.response.data.error);
@@ -59,21 +72,31 @@ const showError = (message) => {
 </script>
 
 <template>
-  <div class="modal" v-if="modal.modalTypedocsAdd">
+  <div class="modal" v-if="modal.modalSubdependencieUpdate">
     <div class="modal__contenido">
       <div class="form__modal--content">
         <div class="header">
-          <button type="button" class="btn__closew" @click="modal.handleClickModalTypedocsAdd(), resetForm()">
+          <button type="button" class="btn__closew" @click="modal.handleClickModalSubdependencieUpdate(), resetForm()">
             <img src="/icons/icon_close_line.svg" alt="Close windows" class="btn__icon__closew">
           </button>
         </div>
 
-        <h3 class="form__modal--title">Type documents Add</h3>
+        <h3 class="form__modal--title">Subdependencie Add</h3>
         <hr>
-        <form class="form__modal" @submit.prevent="createTypedocs">
+        <form class="form__modal" @submit.prevent="updateSubdependencie">
           <div class="form__modal--field">
             <label class="form__modal--label">Name: </label>
             <input class="form__modal--input" type="text" v-model="formData.name" />
+          </div>
+
+          <div class="form__modal--field">
+            <label class="form__modal--label" for="a_rol">Add subdependencie:</label>
+            <select id="d_person" class="form__modal--input" v-model="formData.dependencie">
+              <option value="" selected disabled>Select dependencie...</option>
+              <option v-for="d in storeUtils.dependencies" :key="d.id" :value="d.id">
+                {{ d.name }}
+              </option>
+            </select>
           </div>
 
           <div class="form__modal--field">

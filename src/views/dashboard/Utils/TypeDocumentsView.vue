@@ -2,9 +2,24 @@
 import { useModalStore } from "@/stores/modal";
 import { useUtilsStore } from "@/stores/utils";
 import ModalTypeDocumentsAdd from '@/components/modals/dashboard/ModalTypeDocumentsAdd.vue';
+import ModalTypeDocumentsUpdate from '@/components/modals/dashboard/ModalTypeDocumentsUpdate.vue';
 
 const modal = useModalStore();
 const utilsStore = useUtilsStore();
+
+function deleteTypedoc(id, mod) {
+  const confirmDelete = window.confirm(
+    `¿Are you sure you want to delete the type document ${mod}?`
+  );
+  if (!confirmDelete) {
+    return;
+  }
+  utilsStore.deleteTypeDocument(id).then(response => {
+    console.log(response.msg);
+  }).catch(error => {
+    console.error('Error deleting type document:', error);
+  });
+}
 </script>
 
 <template>
@@ -28,13 +43,18 @@ const utilsStore = useUtilsStore();
           <span>{{ t.acronym }}</span>
         </div>
         <div class="btn__settingsUser">
-            <a href=""><img src="/icons/icon_edit.svg" class="icon__details"> </a>
-            <a href=""><img src="/icons/icon_delete.svg" class="icon__details"> </a>            
+            <a href="" @click.prevent="utilsStore.selectedTypedoc(t.id)">
+              <img src="/icons/icon_edit.svg" class="icon__details"> 
+            </a>
+            <a href="#" @click.prevent="deleteTypedoc(t.id, t.name)">
+                <img src="/icons/icon_delete.svg" class="icon__details">
+            </a>              
         </div>
       </div>
     </div>
   </div>
   <ModalTypeDocumentsAdd/>
+  <ModalTypeDocumentsUpdate/>
 </template>
 
 <style scoped>

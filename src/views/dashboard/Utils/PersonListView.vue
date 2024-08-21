@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue';
 import { usePersonStore } from '@/stores/person';
 import { useModalStore } from "@/stores/modal";
 import ModalPersonAdd from '@/components/modals/dashboard/ModalPersonAdd.vue';
+import ModalPersonUpdate from '@/components/modals/dashboard/ModalPersonUpdate.vue';
 
 const person = usePersonStore();
 const modal = useModalStore();
@@ -13,6 +14,20 @@ onMounted(async () => {
   persons.value = person.personsList;
   console.log('persons: ', persons.value)
 });
+
+function deletePerson(id, uf, ul) {
+  const confirmDelete = window.confirm(
+    `¿Are you sure you want to delete the user ${uf + " " + ul}?`
+  );
+  if (!confirmDelete) {
+    return;
+  }
+  person.deletePerson(id).then(response => {
+    console.log(response.msg);
+  }).catch(error => {
+    console.error('Error deleting user:', error);
+  });
+}
 </script>
 
 <template>
@@ -48,13 +63,18 @@ onMounted(async () => {
           </ul>
         </details>
         <div class="btn__settingsUser">
-            <a href=""><img src="/icons/icon_edit.svg" class="icon__details"> </a>
-            <a href=""><img src="/icons/icon_delete.svg" class="icon__details"> </a>            
+            <a href="" @click.prevent="person.selectedPersonUpdate(p.id)">
+              <img src="/icons/icon_edit.svg" class="icon__details"> 
+            </a>
+            <a href="#" @click.prevent="deletePerson(p.id, p.first_name, p.last_name)">
+                <img src="/icons/icon_delete.svg" class="icon__details">
+            </a>              
         </div>
       </div>
     </div>
   </div>
   <ModalPersonAdd/>
+  <ModalPersonUpdate/>
 </template>
 
 <style scoped>
