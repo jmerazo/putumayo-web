@@ -36,9 +36,7 @@ const formData = ref({
   selected_submodules: {}
 });
 
-console.log('formData inicializado:', formData.value); 
-
-const submodulesInit = ref([]);
+const available_submodules = ref({})
 
 watch(() => formData.value.confirm_password, () => {
   if (formData.value.confirm_password !== '') {
@@ -156,16 +154,24 @@ function toggleModuleSelection(event, moduleId) {
     // Deseleccionar módulo
     formData.value.ump_module.splice(index, 1);
     delete formData.value.module_permissions[moduleId];
+    delete available_submodules.value[moduleId];
     delete formData.value.selected_submodules[moduleId];
     delete formData.value.submodule_permissions[moduleId];
   } else {
     // Seleccionar módulo
     formData.value.ump_module.push(moduleId);
     formData.value.module_permissions[moduleId] = [];
-    formData.value.selected_submodules[moduleId] = getSubmodulesByModule(moduleId);
+
+    // Inicializar los submódulos disponibles para ese módulo
+    available_submodules.value[moduleId] = getSubmodulesByModule(moduleId);
+
+    // Inicializar selected_submodules como un array vacío
+    formData.value.selected_submodules[moduleId] = [];
+
     formData.value.submodule_permissions[moduleId] = {};
   }
 }
+
 function togglePermission(moduleId, permissionId) {
   const permissions = formData.value.module_permissions[moduleId];
   const index = permissions.indexOf(permissionId);
@@ -395,7 +401,7 @@ function getSubmoduleName(submoduleId) {
               </select>
             </div>
 
-            <div v-if="formData.selected_submodules[moduleId] && formData.selected_submodules[moduleId].length > 0">
+            <div v-if="available_submodules[moduleId] && available_submodules[moduleId].length > 0">
               <h5>Submodules</h5>
               <div class="form__modal--field">
                 <label class="form__modal--label" for="ump_submodule">Submodules:</label>
@@ -405,7 +411,7 @@ function getSubmoduleName(submoduleId) {
                     v-for="s in getSubmodulesByModule(moduleId)"
                     :key="s.id"
                     :value="s.id"
-                    :class="{ selected: formData.selected_submodules[moduleId] && formData.selected_submodules[moduleId].includes(s.id) }"
+                    :class="{ selected: available_submodules[moduleId] && available_submodules[moduleId].includes(s.id) }"
                     @click.prevent="toggleSubmoduleSelection($event, moduleId, s.id)"
                   >
                     {{ s.name }}

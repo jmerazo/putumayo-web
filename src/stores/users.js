@@ -121,6 +121,7 @@ export const useUserStore = defineStore('userStore', () => {
             name: "users", // Nombre de la ruta de la vista del panel
           })
           .catch((err) => {});
+          return response;
         }else{
           console.log('status: ', response.status)
           throw new Error(`Error creating user: ${response.statusText}`);
