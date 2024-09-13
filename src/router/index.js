@@ -80,6 +80,11 @@ const router = createRouter({
           name: 'typedocs',
           component: () => import('../views/dashboard/Utils/TypeDocumentsView.vue'),
         },
+        {
+          path: '/news',
+          name: 'news',
+          component: () => import('../views/dashboard/Utils/NewsView.vue'),
+        },
       ]
     }   
   ]

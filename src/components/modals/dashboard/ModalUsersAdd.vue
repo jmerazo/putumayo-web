@@ -367,7 +367,7 @@ function getSubmoduleName(submoduleId) {
 
           <hr>
 
-          <div class="form__modal--field">
+          <!-- <div class="form__modal--field">
             <label class="form__modal--label" for="ump_module">Modules:</label>
             <select id="ump_module" class="form__modal--input" multiple>
               <option value="" disabled>Select modules...</option>
@@ -438,6 +438,73 @@ function getSubmoduleName(submoduleId) {
                 </div>
               </div>
             </div>
+          </div> -->
+          <div class="modules-section">
+            <h4>Modules and Permissions</h4>
+            <table class="modules-table">
+              <thead>
+                <tr>
+                  <th>Module</th>
+                  <th>Permissions</th>
+                  <th>Submodules</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="module in storeUtils.modules" :key="module.id">
+                  <td>
+                    <label>
+                      <input type="checkbox" :value="module.id" v-model="formData.ump_module" @click="toggleModuleSelection($event, module.id)">
+                      {{ module.name }}
+                    </label>
+                  </td>
+                  <td>
+                    <div v-if="formData.ump_module.includes(module.id)">
+                      <div v-for="p in storeUtils.permissions" :key="p.id">
+                        <label>
+                          <input type="checkbox" :value="p.id" v-model="formData.module_permissions[module.id]">
+                          {{ p.name }}
+                        </label>
+                      </div>
+                    </div>
+                  </td>
+                  <td v-if="available_submodules[module.id] && available_submodules[module.id].length > 0">
+                    <div>
+                      <select id="ump_submodule" class="form__modal--input" multiple>
+                        <option value="" disabled>Select submodules...</option>
+                        <option
+                          v-for="s in getSubmodulesByModule(module.id)"
+                          :key="s.id"
+                          :value="s.id"
+                          :class="{ selected: available_submodules[module.id] && available_submodules[module.id].includes(s.id) }"
+                          @click.prevent="toggleSubmoduleSelection($event, module.id, s.id)"
+                        >
+                          {{ s.name }}
+                        </option>
+                      </select>
+                    </div>
+
+                    <div v-for="(subPermissions, submoduleId) in (formData.submodule_permissions[module.id] || {})" :key="submoduleId" class="submodule-permissions">
+                      <h5>{{ getSubmoduleName(submoduleId) }}</h5>
+                      <div class="form__modal--field">
+                        <label class="form__modal--label" for="ump_subpermission">Submodule Permissions:</label>
+                        <select id="ump_subpermission" class="form__modal--input" multiple>
+                          <option value="" disabled>Select permissions...</option>
+                          <option
+                            v-for="p in storeUtils.permissions"
+                            :key="p.id"
+                            :value="p.id"
+                            :class="{ selected: subPermissions.includes(p.id) }"
+                            @click.prevent="toggleSubmodulePermission(module.id, submoduleId, p.id)"
+                          >
+                            {{ p.name }}
+                          </option>
+                        </select>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
 
           <hr>
@@ -623,5 +690,34 @@ function getSubmoduleName(submoduleId) {
 
 .form__modal--field {
   margin-bottom: 1rem;
+}
+
+.modules-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.modules-table th,
+.modules-table td {
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  vertical-align: top;
+  text-align: left;
+}
+
+.submodules-section {
+  margin-top: 1rem;
+  padding-left: 2rem;
+}
+
+.submodule-item {
+  margin-top: 0.5rem;
+}
+
+.permissions-section, .submodule-permissions-section {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
 }
 </style>

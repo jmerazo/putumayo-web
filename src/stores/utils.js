@@ -24,6 +24,12 @@ export const useUtilsStore = defineStore("utilsStore", () => {
   const dependencieSelected = ref('');
   const subdependencies = ref([]);
   const subdependencieSelected = ref('');
+  const calendarEvents = ref({})
+  const calendarEventsDependencies = ref([])
+  const calendarEventsSubdependencies = ref([])
+  const news = ref([]);
+  const newsCategory = ref([]);
+  const selectedNew = ref('');
 
   onMounted(async () => {
     try {
@@ -56,6 +62,9 @@ export const useUtilsStore = defineStore("utilsStore", () => {
 
       const subdependenciesResponse = await APIService.getSubdependencies();
       subdependencies.value = subdependenciesResponse.data;
+
+      /* const calendarEvents = await APIService.getCalendarEvents();
+      calendarEvents.value = calendarEvents.data; */
     } catch (error) {
       console.error("Error al obtener datos: ", error);
     }
@@ -457,6 +466,108 @@ export const useUtilsStore = defineStore("utilsStore", () => {
     }
   }
 
+  // Cargar todos los eventos de calendario
+  async function loadCalendarEvents() {
+    try {
+      const response = await APIService.getCalendarEvents();
+      calendarEvents.value = response.data;
+      console.log('calendarEvents.value ', calendarEvents.value)
+      return calendarEvents.value;
+    } catch (error) {
+      console.error("Error al cargar todos los eventos de calendario: ", error);
+    }
+  }
+
+  // Cargar eventos de calendario por dependencia
+  async function loadCalendarEventsByDependency(dependencieId) {
+    try {
+      const calendarEventsDependenciesResponse = await APIService.getCalendarEventsDependencies(dependencieId);
+      calendarEventsDependencies.value = calendarEventsDependenciesResponse.data;
+    } catch (error) {
+      console.error("Error al cargar los eventos por dependencia: ", error);
+    }
+  }
+
+  // Cargar eventos de calendario por subdependencia
+  async function loadCalendarEventsBySubdependency(subdependencieId) {
+    try {
+      const calendarEventsSubdependenciesResponse = await APIService.getCalendarEventsSubdependencies(subdependencieId);
+      calendarEventsSubdependencies.value = calendarEventsSubdependenciesResponse.data;
+    } catch (error) {
+      console.error("Error al cargar los eventos por subdependencia: ", error);
+    }
+  } 
+
+  async function loadNews() {
+    try {
+      const response = await APIService.getNews();
+      news.value = response.data;
+      return news.value;
+    } catch (error) {
+      console.error("Error loading news: ", error);
+    }
+  }
+
+  const createNews = async(data) => {
+    try {
+      const response = await APIService.createNews(data)
+
+      if(response.status === 201){
+        news.value.push(data); // Agrega el nuevo objeto al array
+        window.location.reload();
+      }else{
+        console.log('status: ', response.status)
+        throw new Error(`Error creating news: ${response.statusText}`);
+      }
+    } catch (error) {
+      console.log('error create new: ', error)
+      throw error;
+    }
+  }
+
+  const newsUpdate = async (id, data) => {
+    const newsIndex = news.value.findIndex((n) => n.id === id);
+    if (newsIndex !== -1) {
+        Object.assign(news.value[newsIndex], data);
+        const response = await APIService.updateNews(id, data)
+        return response;
+    } else {
+        console.error(`New ${id} not found.`);
+    }
+  };
+
+  function selectedNewUpdate(id) {
+    console.log('id new: ', id)
+    selectedNew.value =  news.value.filter(n => n.id === id)
+    modal.handleClickModalNewsUpdate(selectedNew.value); 
+  }
+
+  async function loadNewsCategory() {
+    try {
+      const response = await APIService.getNewsCategory();
+      newsCategory.value = response.data;
+      return newsCategory.value;
+    } catch (error) {
+      console.error("Error loading news category: ", error);
+    }
+  }
+
+  async function deleteNew(id) {
+    const indexToDelete = news.value.findIndex(item => item.id === id);
+  
+    if (indexToDelete === -1) {
+      return { msg: "New not found" };
+    }
+
+    try {
+      await APIService.deleteNews(id); // Realiza la solicitud DELETE al backend
+      news.value.splice(indexToDelete, 1); // Elimina al usuario de la lista local
+      return { msg: "New deleted successfully" };
+    } catch (error) {
+      console.error('Error deleting new:', error.response || error.message || error);
+      return { msg: "Error deleting new", details: error.response || error.message || error };
+    }
+  }
 
   return {
     departments,
@@ -508,6 +619,21 @@ export const useUtilsStore = defineStore("utilsStore", () => {
     groupUpdate,
     typedocSelected,
     selectedTypedoc,
-    typedocUpdate
+    typedocUpdate,
+    loadCalendarEvents,
+    calendarEvents,
+    loadCalendarEventsByDependency,
+    calendarEventsDependencies,
+    loadCalendarEventsBySubdependency,
+    calendarEventsSubdependencies,
+    news,
+    loadNews,
+    createNews,
+    loadNewsCategory,
+    newsCategory,
+    selectedNew,
+    newsUpdate,
+    selectedNewUpdate,
+    deleteNew
   };
 });

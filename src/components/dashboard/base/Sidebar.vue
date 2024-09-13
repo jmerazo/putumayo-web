@@ -68,7 +68,12 @@ onMounted(() => {
         <div class="sidebar-links">
             <ul>
                 <li v-for="(module, index) in userPermissions" :key="module.module.id">
-                <div @click="toggleModule(index)" class="module-header tooltip">
+                <!-- Si el módulo tiene submódulos, usar un div para manejar la expansión/collapsado -->
+                <div 
+                    v-if="module.submodules && module.submodules.length > 0" 
+                    @click="toggleModule(index)" 
+                    class="module-header tooltip"
+                >
                     <img 
                     :src="getFullImageUrl(module.module.icon) || '/icons/icon_default.svg'" 
                     alt="Icon"
@@ -77,16 +82,36 @@ onMounted(() => {
                     <span class="link hide text__sidebar">{{ module.module.name }}</span>
                     <span class="tooltip__content text__sidebar">{{ module.module.name }}</span>
                     <img 
-                    v-if="module.submodules && module.submodules.length > 0" 
                     :class="{'rotate-90': expandedModules[index], 'hidden-arrow': isCollapsed}" 
                     src="/icons/icon_arrow_down.svg" 
                     alt="Expand"
                     class="expand-icon"
                     >
                 </div>
+
+                <!-- Si el módulo no tiene submódulos, usar router-link -->
+                <router-link 
+                    v-else 
+                    :to="module.module.route" 
+                    class="module-header tooltip"
+                >
+                    <img 
+                    :src="getFullImageUrl(module.module.icon) || '/icons/icon_default.svg'" 
+                    alt="Icon"
+                    class="module-icon icons__sidebar"
+                    >
+                    <span class="link hide text__sidebar">{{ module.module.name }}</span>
+                    <span class="tooltip__content text__sidebar">{{ module.module.name }}</span>
+                </router-link>
+
+                <!-- Submódulos -->
                 <ul v-show="expandedModules[index] && !isCollapsed">
                     <li v-for="submodule in module.submodules" :key="submodule.id">
-                    <a :href="submodule.route" :title="submodule.name" class="tooltip">
+                    <router-link 
+                        :to="submodule.route" 
+                        :title="submodule.name" 
+                        class="tooltip"
+                    >
                         <img 
                         class="icons__sidebar__sm"
                         :src="getFullImageUrl(submodule.icon) || '/icons/icon_default.svg'" 
@@ -94,7 +119,7 @@ onMounted(() => {
                         >
                         <span class="link hide text__sidebar__sm">{{ submodule.name }}</span>
                         <span class="tooltip__content text__sidebar__sm">{{ submodule.name }}</span>
-                    </a>
+                    </router-link>
                     </li>
                 </ul>
                 </li>

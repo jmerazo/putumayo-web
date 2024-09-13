@@ -150,6 +150,68 @@ export default {
     deleteSubdependencies(id){
         return api.delete(`/utils/subdependencies/${id}`)
     },
+    /* =============================================== */
+    getCalendarEvents(){
+        return api.get(`/utils/calendar/events/`)
+    },
+    createCalendarEvents(data){
+        return api.post(`/utils/calendar/events/`, data)
+    },
+    updateCalendarEvents(id, data){
+        return api.put(`/utils/calendar/events/${id}`, data)
+    },
+    deleteCalendarEventsDependencies(id){
+        return api.delete(`/utils/calendar/events/${id}`)
+    },
+    getCalendarEventsDependencies(id){
+        return api.get(`/utils/calendar/events/dependencies/${id}`)
+    },
+    createCalendarEventsDependencies(data){
+        return api.post(`/utils/calendar/events/dependencies/`, data)
+    },
+    updateCalendarEventsDependencies(id, data){
+        return api.put(`/utils/calendar/events/dependencies/${id}`, data)
+    },
+    deleteCalendarEventsDependencies(id){
+        return api.delete(`/utils/calendar/events/dependencies/${id}`)
+    },
+    getCalendarEventsSubdependencies(id){
+        return api.get(`/utils/calendar/events/subdependencies/${id}`)
+    },
+    createCalendarEventsSubdependencies(data){
+        return api.post(`/utils/calendar/events/subdependencies/`, data)
+    },
+    updateCalendarEventsSubdependencies(id, data){
+        return api.put(`/utils/calendar/events/subdependencies/${id}`, data)
+    },
+    deleteCalendarEventsSubdependencies(id){
+        return api.delete(`/utils/calendar/events/subdependencies/${id}`)
+    },
+    /* =============================================== */
+    getNews(){
+        return api.get(`/utils/news/`)
+    },
+    createNews(data){
+        return api.post(`/utils/news/`, data, {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+        })
+    },
+    updateNews(id, data){
+        return api.put(`/utils/news/${id}`, data, {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+        })
+    },
+    deleteNews(id){
+        return api.delete(`/utils/news/${id}/`)
+    },
+    getNewsCategory(){
+        return api.get(`/utils/news/category/`)
+    },
+    /* =============================================== */
     /* ==================================================================================================================== */
     /* ==================================================================================================================== */
     // ENDPOINT →→ PERSON

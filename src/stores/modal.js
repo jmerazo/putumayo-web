@@ -25,6 +25,8 @@ export const useModalStore = defineStore('modal',()=>{
     const modalTypedocsUpdate = ref(false)
     const modalPersonUpdate = ref(false)
     const modalSubmoduleUpdate = ref(false)
+    const modalNewsAdd = ref(false)
+    const modalNewsUpdate = ref(false)
     
     //modal user
     function handleClickModalUserAdd(){
@@ -111,6 +113,14 @@ export const useModalStore = defineStore('modal',()=>{
         modalTypedocsUpdate.value = !modalTypedocsUpdate.value
     }
 
+    function handleClickModalNewsAdd(){
+        modalNewsAdd.value = !modalNewsAdd.value
+    }
+
+    function handleClickModalNewsUpdate(){
+        modalNewsUpdate.value = !modalNewsUpdate.value
+    }
+
     return {
         modalUserAdd,
         handleClickModalUserAdd,
@@ -153,6 +163,10 @@ export const useModalStore = defineStore('modal',()=>{
         modalTypedocsUpdate,
         handleClickModalTypedocsUpdate,
         modalUserPassword,
-        handleClickModalUserPassword
+        handleClickModalUserPassword,
+        modalNewsAdd,
+        handleClickModalNewsAdd,
+        modalNewsUpdate,
+        handleClickModalNewsUpdate
     }
 })
